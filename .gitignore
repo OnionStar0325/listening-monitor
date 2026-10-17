@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+certs/*.crt
+certs/*.key
+!certs/.gitkeep
+.DS_Store

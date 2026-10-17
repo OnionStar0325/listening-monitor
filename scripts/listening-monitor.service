@@ -1,0 +1,26 @@
+[Unit]
+Description=Realtime Audio Secure Monitor Service
+After=network.target sound.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/orca/workspaces/listening-monitor/zander
+ExecStart=/usr/bin/python3 main.py
+Restart=always
+RestartSec=5
+
+# 443 포트(비특권 계정의 1024 이하 포트 바인딩)를 위한 보안 기능 권한 부여
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+
+# 환경 변수 (필요시 포트 변경 가능)
+# Environment="PORT=443"
+# Environment="ADMIN_PASSWORD=your_secure_password"
+
+# 로그 설정
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

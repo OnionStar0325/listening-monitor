@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>실시간 오디오 보안 모니터 - 로그인</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="login-body">
+    <div class="login-card">
+        <div class="brand-header">
+            <div class="pulse-icon">🎙️</div>
+            <h1>Listening Monitor</h1>
+            <p class="subtitle">실시간 오디오 보안 스트리밍 & 관리 시스템</p>
+        </div>
+
+        <form id="loginForm" class="login-form" method="POST" action="/login">
+            <div class="input-group">
+                <label for="username">관리자 계정</label>
+                <input type="text" id="username" name="username" value="admin" required autocomplete="username">
+            </div>
+
+            <div class="input-group">
+                <label for="password">비밀번호</label>
+                <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="current-password" autofocus>
+            </div>
+
+            {% if error %}
+            <div id="errorAlert" class="alert-box error">{{ error }}</div>
+            {% else %}
+            <div id="errorAlert" class="alert-box error hidden"></div>
+            {% endif %}
+
+            <button type="submit" id="submitBtn" class="btn btn-primary btn-block">
+                <span>보안 접속 시작</span>
+            </button>
+        </form>
+
+        <div class="login-footer">
+            <p>🔒 TLS/WSS 암호화 보안 통신 구동 중</p>
+            <p class="small text-muted">기본 비밀번호는 <span class="badge">admin1234!</span> 입니다.</p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById("loginForm").addEventListener("submit", function() {
+            const btn = document.getElementById("submitBtn");
+            btn.disabled = true;
+            btn.innerHTML = "<span>접속 중...</span>";
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ListeningMonitor">
+    <title>실시간 오디오 청취기</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="listener-body">
+    <div class="listener-card">
+        <div class="listener-header">
+            <span class="pulse-icon">🎙️</span>
+            <h2>실시간 오디오 모니터</h2>
+            <p id="listenerStatus" class="status-indicator">연결 준비 중...</p>
+        </div>
+
+        <div class="visualizer-wrapper">
+            <canvas id="vuMeter" width="360" height="90"></canvas>
+        </div>
+
+        <div class="listener-controls">
+            <button id="playBtn" class="btn btn-play-large" onclick="toggleAudioPlayback()">
+                <span id="playIcon">▶</span> <span id="playText">청취 시작하기</span>
+            </button>
+        </div>
+
+        <div class="control-row">
+            <label for="localVolume">볼륨:</label>
+            <input type="range" id="localVolume" min="0" max="100" value="85" oninput="setPlayerVolume(this.value)">
+            <span id="volumeValue" class="slider-val">85%</span>
+        </div>
+
+        <div id="kickedAlert" class="alert-box error hidden">
+            🚨 <strong>알림:</strong> 관리자에 의해 세션 연결이 종료되었습니다.
+        </div>
+
+        <div class="listener-footer">
+            <p>🔒 TLS 암호화 보안 스트림 구동 중</p>
+        </div>
+    </div>
+
+    <script>
+        // 서버에서 전달된 토큰 파라미터 보관
+        window.LISTENER_TOKEN = "{{ token }}";
+    </script>
+    <script src="/static/js/audio_player.js"></script>
+    <script>
+        window.addEventListener("DOMContentLoaded", () => {
+            initAudioPlayer({
+                token: window.LISTENER_TOKEN,
+                statusElemId: "listenerStatus",
+                playBtnId: "playBtn",
+                canvasId: "vuMeter",
+                onKicked: () => {
+                    document.getElementById("kickedAlert").classList.remove("hidden");
+                    document.getElementById("playBtn").disabled = true;
+                    document.getElementById("listenerStatus").textContent = "연결 차단됨";
+                    document.getElementById("listenerStatus").className = "status-indicator offline";
+                }
+            });
+        });
+    </script>
+</body>
+</html>
