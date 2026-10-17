@@ -9,10 +9,9 @@ STATIC_DIR = BASE_DIR / "static"
 TEMPLATES_DIR = BASE_DIR / "templates"
 
 # [네트워크 및 포트 설정]
-# 기본값은 443(표준 HTTPS)이며, 환경변수 PORT 또는 본 설정값으로 변경 가능합니다.
-# (루트 권한 없이 실행하려면 8443 등으로 변경할 수 있습니다)
+# 기본값은 8443(비특권 포트 권장)이며, 환경변수 PORT(예: PORT=443) 또는 본 설정값으로 변경 가능합니다.
 SERVER_HOST: str = os.getenv("HOST", "0.0.0.0")
-SERVER_PORT: int = int(os.getenv("PORT", "443"))
+SERVER_PORT: int = int(os.getenv("PORT", "8443"))
 
 # [SSL / TLS 보안 설정]
 SSL_CERT_FILE: Path = CERTS_DIR / "server.crt"

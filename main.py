@@ -96,12 +96,29 @@ def run_server():
             access_log=False,  # 시스템 I/O 부하 절감
         )
     except PermissionError:
-        logger.error(
-            f"❌ 포트 {port} 바인딩 권한 오류: 1024 이하 포트(443)는 sudo 권한이 필요합니다.\n"
-            f"   'sudo python3 main.py' 로 실행하거나,\n"
-            f"   config.py에서 SERVER_PORT를 8443 등으로 변경하여 실행하세요."
-        )
-        sys.exit(1)
+        if port == 443:
+            logger.warning(
+                "⚠️ 포트 443 바인딩 권한 부족 (비특권 사용자 또는 ChromeOS/컨테이너 환경).\n"
+                "   안전한 대체 포트 8443으로 자동 전환하여 서버를 실행합니다."
+            )
+            port = 8443
+            logger.info(f"🌐 보안 서버 구동: https://{host}:{port}")
+            logger.info(f"🔒 WSS 스트림 주소: wss://{host}:{port}/ws/stream")
+            uvicorn.run(
+                "main:app",
+                host=host,
+                port=port,
+                ssl_keyfile=key_path,
+                ssl_certfile=cert_path,
+                log_level="info",
+                access_log=False,
+            )
+        else:
+            logger.error(
+                f"❌ 포트 {port} 바인딩 권한 오류: 권한이 부족합니다.\n"
+                f"   포트를 8443 등 1024 이상의 비특권 포트로 변경하여 실행하세요."
+            )
+            sys.exit(1)
 
 
 if __name__ == "__main__":

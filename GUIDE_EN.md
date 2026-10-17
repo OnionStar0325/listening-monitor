@@ -45,8 +45,13 @@ pip install -r requirements.txt
 - **Linux (Debian / Ubuntu / Raspberry Pi OS / ChromeOS Crostini)**:
   ```bash
   sudo apt-get update
-  sudo apt-get install -y alsa-utils libasound2-dev openssl
+  sudo apt-get install -y python3 python3-pip python3-venv python3-dev build-essential alsa-utils libasound2-dev libasound2-plugins libportaudio2 portaudio19-dev pulseaudio-utils openssl
   ```
+  *(Or simply run `./setup.sh` / `bash scripts/setup.sh` to configure packages and virtual environment automatically)*
+  > 💡 **Chromebook (ChromeOS Crostini) Notes**:
+  > - To access the built-in microphone, turn on **"Allow Linux to access your microphone"** under ChromeOS `Settings > Advanced > Developers > Linux development environment`.
+  > - To comply with Debian 12 (Bookworm) PEP 668 externally managed environment rules, using `python3 -m venv venv` is recommended.
+
 - **Windows 10/11**:
   - No external packages needed. Python 3.8+ and running `scripts\setup.bat` suffice.
 

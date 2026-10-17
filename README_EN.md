@@ -54,18 +54,15 @@ Listening Monitor captures microphone audio on diverse host systems including **
 
 ### A. Linux / ChromeOS (Crostini)
 ```bash
-# 1. Install prerequisites
-sudo apt-get update && sudo apt-get install -y python3 python3-pip alsa-utils libasound2-dev openssl
+# 1. Run automated setup script (installs apt packages & sets up venv)
+./setup.sh
+# (or bash scripts/setup.sh)
 
-# 2. Install Python dependencies
-pip3 install -r requirements.txt
-
-# 3. Launch server
-python3 main.py
-
-# Or specify custom port and capture backend:
-PORT=8443 AUDIO_CAPTURE_BACKEND=auto python3 main.py
+# 2. Launch server (Default port: 8443)
+./run.sh
+# (or python3 main.py)
 ```
+> 💡 **Chromebook (ChromeOS) Mic Setup**: To capture the built-in microphone on ChromeOS, go to `Settings > Advanced > Developers > Linux development environment` and turn on **"Allow Linux to access your microphone"**. (If no mic is found, virtual tone mode will activate automatically)
 
 ### B. Windows 10/11
 ```cmd

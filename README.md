@@ -52,20 +52,17 @@
 
 ## 🚀 빠른 시작 가이드 (Quick Start)
 
-### A. Linux / 라즈베리파이 / ChromeOS 환경
+### A. Linux / ChromeOS / 라즈베리파이 환경
 ```bash
-# 1. 시스템 필수 패키지 설치
-sudo apt-get update && sudo apt-get install -y python3 python3-pip alsa-utils libasound2-dev openssl
+# 1. 원클릭 자동 설정 스크립트 실행 (apt 필수 패키지 및 venv 자동 구성)
+./setup.sh
+# (또는 bash scripts/setup.sh)
 
-# 2. 파이썬 라이브러리 설치
-pip3 install -r requirements.txt
-
-# 3. 서버 실행 (포트 443 기본)
-sudo python3 main.py
-
-# (선택) 8443 포트로 실행할 경우
-PORT=8443 python3 main.py
+# 2. 서버 실행 (기본 8443 포트)
+./run.sh
+# (또는 python3 main.py)
 ```
+> 💡 **크롬북(ChromeOS) 마이크 설정**: 크롬북 내장 마이크를 사용하시려면 `ChromeOS 설정 > 고급 > 개발자 > Linux 개발 환경 > 마이크 액세스 허용` 토글을 활성화하세요. (마이크 미인식 시에도 가상 톤 모드로 정상 동작합니다)
 
 ### B. 윈도우 (Windows 10/11) 환경
 ```cmd

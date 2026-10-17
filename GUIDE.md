@@ -45,8 +45,13 @@ pip install -r requirements.txt
 - **Linux / Raspberry Pi / ChromeOS**:
   ```bash
   sudo apt-get update
-  sudo apt-get install -y alsa-utils libasound2-dev openssl
+  sudo apt-get install -y python3 python3-pip python3-venv python3-dev build-essential alsa-utils libasound2-dev libasound2-plugins libportaudio2 portaudio19-dev pulseaudio-utils openssl
   ```
+  *(간편하게 `./setup.sh` 또는 `bash scripts/setup.sh`를 실행하면 위 패키지 및 venv가 자동 구성됩니다)*
+  > 💡 **크롬북(ChromeOS Crostini) 주의사항**:
+  > - 크롬북 내장 마이크를 사용하려면 ChromeOS의 `설정 > 고급 > 개발자 > Linux 개발 환경 > 마이크 액세스 허용` 토글을 켜야 합니다.
+  > - Debian 12(Bookworm) 기반의 외부 관리 환경(PEP 668) 정책에 따라 `python3 -m venv venv` 가상환경 내에서 실행하는 것을 권장합니다.
+
 - **Windows**:
   - 별도 시스템 패키지 불필요 (Python 3.8+ 설치 및 `scripts\setup.bat` 실행)
 
