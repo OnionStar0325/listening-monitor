@@ -20,9 +20,12 @@
             </div>
         </div>
         <div class="nav-actions">
-            <span id="serverUptime" class="badge badge-info">가동 시간: {{ stats.uptime_str }}</span>
-            <button class="btn btn-outline-sm" onclick="openPasswordModal()">🔑 비밀번호 변경</button>
-            <button class="btn btn-danger-sm" onclick="logout()">로그아웃</button>
+            <button type="button" class="btn-lang" onclick="toggleLanguage()" title="Change Language">
+                <span id="langLabel">🌐 English</span>
+            </button>
+            <span id="serverUptime" class="badge badge-info"><span data-i18n="nav_uptime_prefix">가동 시간: </span>{{ stats.uptime_str }}</span>
+            <button class="btn btn-outline-sm" onclick="openPasswordModal()" data-i18n="nav_change_pw">🔑 비밀번호 변경</button>
+            <button class="btn btn-danger-sm" onclick="logout()" data-i18n="nav_logout">로그아웃</button>
         </div>
     </header>
 
@@ -30,22 +33,22 @@
         <!-- 시스템 상태 지표 카드 그리드 (SSR 초기값으로 즉시 렌더링) -->
         <section class="stats-grid">
             <div class="stat-card">
-                <div class="stat-label">호스트 CPU 사용률</div>
+                <div class="stat-label" data-i18n="stat_cpu">호스트 CPU 사용률</div>
                 <div class="stat-value" id="cpuStat">{{ stats.cpu_percent }}%</div>
-                <div class="stat-sub" id="tempStat">온도: {{ stats.cpu_temperature }} °C</div>
+                <div class="stat-sub" id="tempStat"><span data-i18n="stat_temp_prefix">온도: </span>{{ stats.cpu_temperature }} °C</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">메모리 사용량 (RAM)</div>
+                <div class="stat-label" data-i18n="stat_ram">메모리 사용량 (RAM)</div>
                 <div class="stat-value" id="memStat">{{ stats.memory_percent }}%</div>
                 <div class="stat-sub" id="memDetailStat">{{ stats.memory_used_mb }} / {{ stats.memory_total_mb }} MB</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">현재 연결 세션</div>
-                <div class="stat-value text-accent" id="activeSessionsCount">{{ total_sessions }}개</div>
-                <div class="stat-sub" id="streamingCount">실시간 청취 중: {{ active_listeners }}명</div>
+                <div class="stat-label" data-i18n="stat_sessions">현재 연결 세션</div>
+                <div class="stat-value text-accent" id="activeSessionsCount">{{ total_sessions }}<span data-i18n="stat_unit_count">개</span></div>
+                <div class="stat-sub" id="streamingCount"><span data-i18n="stat_streaming_prefix">실시간 청취 중: </span>{{ active_listeners }}<span data-i18n="stat_streaming_suffix">명</span></div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">오디오 스트림 상태</div>
+                <div class="stat-label" data-i18n="stat_audio">오디오 스트림 상태</div>
                 <div class="stat-value text-success" id="audioModeBadge">{{ audio_status.active_backend if not audio_status.is_fallback_tone else "가상 톤" }}</div>
                 <div class="stat-sub" id="audioDetail">{{ audio_status.device }} ({{ audio_status.sample_rate }}Hz)</div>
             </div>
@@ -56,8 +59,8 @@
             <!-- 좌측: 실시간 오디오 플레이어 및 게인 제어 -->
             <div class="panel">
                 <div class="panel-header">
-                    <h2>🎧 실시간 청취 & 마이크 제어</h2>
-                    <span id="playerStatus" class="status-indicator offline">정지됨</span>
+                    <h2 data-i18n="player_title">🎧 실시간 청취 & 마이크 제어</h2>
+                    <span id="playerStatus" class="status-indicator offline" data-i18n="player_status_stopped">정지됨</span>
                 </div>
 
                 <div class="player-box">
@@ -68,18 +71,18 @@
 
                     <div class="player-controls">
                         <button id="playBtn" class="btn btn-play" onclick="toggleAudioPlayback()">
-                            <span id="playIcon">▶</span> <span id="playText">실시간 청취 시작</span>
+                            <span id="playIcon">▶</span> <span id="playText" data-i18n="btn_start_listen">실시간 청취 시작</span>
                         </button>
                     </div>
 
                     <div class="control-row">
-                        <label for="localVolume">청취 볼륨:</label>
+                        <label for="localVolume" data-i18n="label_volume">청취 볼륨:</label>
                         <input type="range" id="localVolume" min="0" max="100" value="80" oninput="setPlayerVolume(this.value)">
                         <span id="volumeValue" class="slider-val">80%</span>
                     </div>
 
                     <div class="control-row">
-                        <label for="inputGain">마이크 입력 게인(소프트웨어 증폭):</label>
+                        <label for="inputGain" data-i18n="label_mic_gain">마이크 입력 게인(소프트웨어 증폭):</label>
                         <input type="range" id="inputGain" min="0" max="30" value="10" onchange="updateGain(this.value)">
                         <span id="gainValue" class="slider-val">1.0x</span>
                     </div>
@@ -90,42 +93,42 @@
             <!-- 우측: 청취자 초대 링크 및 QR 코드 발급 -->
             <div class="panel">
                 <div class="panel-header">
-                    <h2>🔗 청취자 초대 & QR 코드 발급</h2>
+                    <h2 data-i18n="invite_title">🔗 청취자 초대 & QR 코드 발급</h2>
                 </div>
                 <div class="invite-box">
-                    <p class="panel-desc">스마트폰(Android/iOS)이나 PC에서 별도 앱 설치 없이 접속할 수 있는 보안 초대 링크 및 QR 코드를 생성합니다.</p>
+                    <p class="panel-desc" data-i18n="invite_desc">스마트폰(Android/iOS)이나 PC에서 별도 앱 설치 없이 접속할 수 있는 보안 초대 링크 및 QR 코드를 생성합니다.</p>
                     <div class="input-inline">
-                        <input type="text" id="inviteName" placeholder="청취자 이름 (예: 거실 태블릿, 스마트폰)" required>
+                        <input type="text" id="inviteName" placeholder="청취자 이름 (예: 거실 태블릿, 스마트폰)" data-i18n-placeholder="ph_invite_name" required>
                         <select id="inviteExpire">
-                            <option value="1">1시간 유효</option>
-                            <option value="6">6시간 유효</option>
-                            <option value="24" selected>24시간 유효</option>
-                            <option value="168">7일 유효</option>
+                            <option value="1" data-i18n="opt_1h">1시간 유효</option>
+                            <option value="6" data-i18n="opt_6h">6시간 유효</option>
+                            <option value="24" selected data-i18n="opt_24h">24시간 유효</option>
+                            <option value="168" data-i18n="opt_7d">7일 유효</option>
                         </select>
-                        <button class="btn btn-primary" onclick="createInviteToken()">초대 생성</button>
+                        <button class="btn btn-primary" onclick="createInviteToken()" data-i18n="btn_create_invite">초대 생성</button>
                     </div>
 
                     <!-- 생성 결과: URL 복사 + QR 코드 표시 영역 (초대 생성 버튼 클릭 시 노출) -->
                     <div id="inviteResult" class="invite-result hidden">
                         <div class="invite-split">
                             <div class="invite-url-part">
-                                <label id="inviteUrlLabel">현재 생성된 접속 URL:</label>
+                                <label id="inviteUrlLabel" data-i18n="label_generated_url">현재 생성된 접속 URL:</label>
                                 <div class="copy-box">
-                                    <input type="text" id="generatedUrl" readonly placeholder="초대 생성 버튼을 누르거나 로딩 중...">
-                                    <button class="btn btn-sm" onclick="copyInviteUrl()">📋 복사</button>
+                                    <input type="text" id="generatedUrl" readonly placeholder="초대 생성 버튼을 누르거나 로딩 중..." data-i18n-placeholder="ph_generated_url">
+                                    <button class="btn btn-sm" id="copyBtn" onclick="copyInviteUrl()" data-i18n="btn_copy">📋 복사</button>
                                 </div>
-                                <span class="small text-muted" id="inviteTargetLabel">수신자는 링크를 열면 웹 브라우저로 즉시 청취할 수 있습니다.</span>
+                                <span class="small text-muted" id="inviteTargetLabel" data-i18n="invite_target_label">수신자는 링크를 열면 웹 브라우저로 즉시 청취할 수 있습니다.</span>
                             </div>
 
                             <!-- QR 코드 카드 -->
                             <div class="qr-card">
-                                <div class="qr-box" id="qrContainer" onclick="openQrModal()" title="클릭하여 확대">
+                                <div class="qr-box" id="qrContainer" onclick="openQrModal()" title="클릭하여 확대" data-i18n-title="qr_click_zoom">
                                     <img id="qrImage" class="qr-img" src="" alt="스마트폰 접속 QR 코드" style="display:none;">
                                     <div id="qrPlaceholder" class="qr-placeholder text-muted small">QR 로딩 중...</div>
                                 </div>
                                 <div class="qr-desc">
-                                    <span>📱 <strong>스마트폰 카메라로 스캔</strong></span>
-                                    <small class="text-muted">클릭 시 확대 보기</small>
+                                    <span data-i18n="qr_scan_title">📱 <strong>스마트폰 카메라로 스캔</strong></span>
+                                    <small class="text-muted" data-i18n="qr_click_zoom">클릭 시 확대 보기</small>
                                 </div>
                             </div>
                         </div>
@@ -138,11 +141,11 @@
         <section class="panel session-panel">
             <div class="panel-header">
                 <div>
-                    <h2>👥 활성 세션 관리</h2>
-                    <span class="panel-desc">현재 시스템에 인증되었거나 오디오를 청취 중인 클라이언트 목록입니다.</span>
+                    <h2 data-i18n="session_mgmt_title">👥 활성 세션 관리</h2>
+                    <span class="panel-desc" data-i18n="session_mgmt_desc">현재 시스템에 인증되었거나 오디오를 청취 중인 클라이언트 목록입니다.</span>
                 </div>
                 <div>
-                    <button class="btn btn-danger-sm" onclick="kickAllListeners()">🚨 모든 청취자 일괄 추방</button>
+                    <button class="btn btn-danger-sm" onclick="kickAllListeners()" data-i18n="btn_kick_all">🚨 모든 청취자 일괄 추방</button>
                 </div>
             </div>
 
@@ -150,13 +153,13 @@
                 <table class="session-table">
                     <thead>
                         <tr>
-                            <th>사용자 / 세션</th>
-                            <th>역할</th>
-                            <th>접속 IP</th>
-                            <th>기기 / 브라우저</th>
-                            <th>접속 시간</th>
-                            <th>청취 상태</th>
-                            <th>관리 제어</th>
+                            <th data-i18n="th_user">사용자 / 세션</th>
+                            <th data-i18n="th_role">역할</th>
+                            <th data-i18n="th_ip">접속 IP</th>
+                            <th data-i18n="th_device">기기 / 브라우저</th>
+                            <th data-i18n="th_time">접속 시간</th>
+                            <th data-i18n="th_status">청취 상태</th>
+                            <th data-i18n="th_control">관리 제어</th>
                         </tr>
                     </thead>
                     <tbody id="sessionTableBody">
@@ -166,33 +169,33 @@
                                 <td><strong>{{ s.client_name }}</strong><br><small class="text-muted">{{ s.session_id[:16] }}...</small></td>
                                 <td>
                                     {% if s.role == 'admin' %}
-                                    <span class="badge badge-admin">관리자</span>
+                                    <span class="badge badge-admin" data-i18n="role_admin">관리자</span>
                                     {% else %}
-                                    <span class="badge badge-listener">청취자</span>
+                                    <span class="badge badge-listener" data-i18n="role_listener">청취자</span>
                                     {% endif %}
                                 </td>
                                 <td><code>{{ s.ip_address }}</code></td>
                                 <td><small>{{ s.user_agent[:40] }}...</small></td>
-                                <td>{{ s.duration_seconds }}초 전</td>
+                                <td>{{ s.duration_seconds }}<span data-i18n="seconds_ago">초 전</span></td>
                                 <td>
                                     {% if s.is_streaming %}
-                                    <span class="status-indicator online">청취 중</span>
+                                    <span class="status-indicator online" data-i18n="stream_badge_active">청취 중</span>
                                     {% else %}
-                                    <span class="status-indicator offline">대기</span>
+                                    <span class="status-indicator offline" data-i18n="stream_badge_idle">대기</span>
                                     {% endif %}
                                 </td>
                                 <td>
                                     {% if s.role == 'admin' %}
                                     <span class="text-muted small">-</span>
                                     {% else %}
-                                    <button class="btn btn-danger-sm" onclick="kickSession('{{ s.session_id }}')">추방(Kick)</button>
+                                    <button class="btn btn-danger-sm" onclick="kickSession('{{ s.session_id }}')" data-i18n="btn_kick">추방(Kick)</button>
                                     {% endif %}
                                 </td>
                             </tr>
                             {% endfor %}
                         {% else %}
                         <tr>
-                            <td colspan="7" class="text-center text-muted">등록된 세션이 없습니다.</td>
+                            <td colspan="7" class="text-center text-muted" data-i18n="no_sessions">등록된 세션이 없습니다.</td>
                         </tr>
                         {% endif %}
                     </tbody>
@@ -204,19 +207,19 @@
     <!-- 비밀번호 변경 모달 다이얼로그 -->
     <div id="passwordModal" class="modal-overlay hidden">
         <div class="modal-card">
-            <h3>🔑 관리자 비밀번호 변경</h3>
+            <h3 data-i18n="pw_modal_title">🔑 관리자 비밀번호 변경</h3>
             <div class="input-group">
-                <label for="oldPassword">현재 비밀번호</label>
+                <label for="oldPassword" data-i18n="label_old_pw">현재 비밀번호</label>
                 <input type="password" id="oldPassword">
             </div>
             <div class="input-group">
-                <label for="newPassword">새 비밀번호 (4자 이상)</label>
+                <label for="newPassword" data-i18n="label_new_pw">새 비밀번호 (4자 이상)</label>
                 <input type="password" id="newPassword">
             </div>
             <div id="pwAlert" class="alert-box error hidden"></div>
             <div class="modal-actions">
-                <button class="btn btn-outline" onclick="closePasswordModal()">취소</button>
-                <button class="btn btn-primary" onclick="submitPasswordChange()">변경 저장</button>
+                <button class="btn btn-outline" onclick="closePasswordModal()" data-i18n="btn_cancel">취소</button>
+                <button class="btn btn-primary" onclick="submitPasswordChange()" data-i18n="btn_save">변경 저장</button>
             </div>
         </div>
     </div>
@@ -224,17 +227,18 @@
     <!-- QR 코드 확대 모달 다이얼로그 -->
     <div id="qrModal" class="modal-overlay hidden" onclick="closeQrModal()">
         <div class="modal-card text-center" onclick="event.stopPropagation()">
-            <h3 id="qrModalTitle">📱 스마트폰 접속 QR 코드</h3>
+            <h3 id="qrModalTitle" data-i18n="qr_modal_title_default">📱 스마트폰 접속 QR 코드</h3>
             <div style="background:white; padding:16px; border-radius:12px; display:inline-block; margin:1rem auto;">
                 <img id="qrModalImage" src="" alt="QR Code" style="width:220px; height:220px; display:block;">
             </div>
-            <p class="small text-muted" id="qrModalDesc">스마트폰 카메라로 비추면 즉시 청취 페이지로 접속됩니다.</p>
+            <p class="small text-muted" id="qrModalDesc" data-i18n="qr_modal_desc">스마트폰 카메라로 비추면 즉시 청취 페이지로 접속됩니다.</p>
             <div class="modal-actions" style="justify-content:center; margin-top:1rem;">
-                <button class="btn btn-outline" onclick="closeQrModal()">닫기</button>
+                <button class="btn btn-outline" onclick="closeQrModal()" data-i18n="btn_close">닫기</button>
             </div>
         </div>
     </div>
 
+    <script src="/static/js/i18n.js"></script>
     <script src="/static/js/audio_player.js"></script>
     <script src="/static/js/app.js"></script>
 </body>

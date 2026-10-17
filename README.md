@@ -1,5 +1,7 @@
 # 🎙️ Listening Monitor (크로스 플랫폼 실시간 오디오 보안 스트리밍 & 모니터링 시스템)
 
+[🇰🇷 한국어 버전 (Korean)](README.md) | [🇺🇸 English Version](README_EN.md)
+
 라즈베리파이, Linux, Windows, ChromeOS 등 다양한 호스트 시스템에서 마이크 입력을 캡처하여 **안드로이드, iOS, 윈도우, 웹 브라우저**로 초저지연 실시간 스트리밍하고, 안전한 암호화 통신(WSS/HTTPS)과 세션 제어 및 QR 코드 연동 기능을 제공하는 모니터링 솔루션입니다.
 
 ---

@@ -475,6 +475,31 @@ body {
 
 .btn-block { width: 100%; }
 
+.btn-lang {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--panel-border);
+    color: var(--text-primary);
+    font-size: 0.8rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+.btn-lang:hover {
+    background: rgba(56, 189, 248, 0.15);
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.card-top-action {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 0.5rem;
+}
+
 /* 뱃지 */
 .badge {
     display: inline-block;

@@ -8,20 +8,26 @@
 </head>
 <body class="login-body">
     <div class="login-card">
+        <div class="card-top-action">
+            <button type="button" class="btn-lang" onclick="toggleLanguage()" title="Change Language">
+                <span id="langLabel">🌐 English</span>
+            </button>
+        </div>
+
         <div class="brand-header">
             <div class="pulse-icon">🎙️</div>
             <h1>Listening Monitor</h1>
-            <p class="subtitle">실시간 오디오 보안 스트리밍 & 관리 시스템</p>
+            <p class="subtitle" data-i18n="login_subtitle">실시간 오디오 보안 스트리밍 & 관리 시스템</p>
         </div>
 
         <form id="loginForm" class="login-form" method="POST" action="/login">
             <div class="input-group">
-                <label for="username">관리자 계정</label>
+                <label for="username" data-i18n="label_username">관리자 계정</label>
                 <input type="text" id="username" name="username" value="admin" required autocomplete="username">
             </div>
 
             <div class="input-group">
-                <label for="password">비밀번호</label>
+                <label for="password" data-i18n="label_password">비밀번호</label>
                 <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="current-password" autofocus>
             </div>
 
@@ -32,21 +38,22 @@
             {% endif %}
 
             <button type="submit" id="submitBtn" class="btn btn-primary btn-block">
-                <span>보안 접속 시작</span>
+                <span data-i18n="btn_login">보안 접속 시작</span>
             </button>
         </form>
 
         <div class="login-footer">
-            <p>🔒 TLS/WSS 암호화 보안 통신 구동 중</p>
-            <p class="small text-muted">기본 비밀번호는 <span class="badge">admin1234!</span> 입니다.</p>
+            <p data-i18n="login_footer_secure">🔒 TLS/WSS 암호화 보안 통신 구동 중</p>
+            <p class="small text-muted" data-i18n="login_footer_default_pw">기본 비밀번호는 <span class="badge">admin1234!</span> 입니다.</p>
         </div>
     </div>
 
+    <script src="/static/js/i18n.js"></script>
     <script>
         document.getElementById("loginForm").addEventListener("submit", function() {
             const btn = document.getElementById("submitBtn");
             btn.disabled = true;
-            btn.innerHTML = "<span>접속 중...</span>";
+            btn.innerHTML = `<span>${window.i18n ? window.i18n.t("btn_logging_in") : "접속 중..."}</span>`;
         });
     </script>
 </body>

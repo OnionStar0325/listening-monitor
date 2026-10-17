@@ -1,5 +1,7 @@
 # 프로젝트 디렉토리 구조 (Project Structure)
 
+[🇰🇷 한국어 버전 (Korean)](structure.md) | [🇺🇸 English Version](structure_EN.md)
+
 크로스 플랫폼(Linux, Windows, ChromeOS, Raspberry Pi) 실시간 오디오 보안 스트리밍 및 모니터링 시스템의 전체 프로젝트 구조입니다.
 
 ```text

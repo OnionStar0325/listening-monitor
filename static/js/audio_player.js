@@ -45,6 +45,9 @@ class RealtimeAudioPlayer {
         this.isPlaying = false;
         this.volume = 0.85;
 
+        this.statusKey = "player_status_stopped";
+        this.statusClass = "offline";
+
         this.canvas = null;
         this.canvasCtx = null;
         this.animFrameId = null;
@@ -60,6 +63,10 @@ class RealtimeAudioPlayer {
         this._initAudioElements();
         this._setupMediaSession();
         this._setupVisibilityHandler();
+
+        window.addEventListener("languageChanged", () => {
+            this._refreshLanguage();
+        });
 
         if (this.isIOS) {
             console.log("[Audio] iOS 기기 감지: 잠금화면 무중단 재생 앵커 및 MediaStream 파이프라인이 자동 활성화됩니다.");
@@ -248,7 +255,7 @@ class RealtimeAudioPlayer {
         }
 
         this.nextStartTime = 0;
-        this._setStatus("정지됨", "offline");
+        this._setStatusByKey("player_status_stopped", "offline");
         this._updateUI(false);
         this._drawIdleVisualizer();
     }
@@ -304,7 +311,7 @@ class RealtimeAudioPlayer {
             wsUrl += `?token=${encodeURIComponent(this.token)}`;
         }
 
-        this._setStatus("스트림 연결 중...", "offline");
+        this._setStatusByKey("player_status_connecting", "offline");
         const ws = new WebSocket(wsUrl);
         this.websocket = ws;
         ws.binaryType = "arraybuffer";
@@ -312,8 +319,8 @@ class RealtimeAudioPlayer {
         ws.onopen = () => {
             // 현재 플레이어의 활성 소켓인 경우에만 상태 업데이트
             if (this.websocket === ws && this.isPlaying) {
-                const modeText = this.isIOS ? "실시간 청취 중 (iOS 잠금화면 무중단 가동)" : "실시간 청취 중 (초저지연 WSS)";
-                this._setStatus(modeText, "online");
+                const modeKey = this.isIOS ? "player_status_ios_online" : "player_status_online";
+                this._setStatusByKey(modeKey, "online");
             }
         };
 
@@ -326,7 +333,7 @@ class RealtimeAudioPlayer {
         ws.onerror = (err) => {
             if (this.websocket === ws) {
                 console.error("WSS 스트림 에러:", err);
-                this._setStatus("연결 오류", "offline");
+                this._setStatusByKey("player_status_error", "offline");
             }
         };
 
@@ -335,11 +342,11 @@ class RealtimeAudioPlayer {
             if (this.websocket === ws) {
                 this.websocket = null;
                 if (event.code === 4001) {
-                    this._setStatus("관리자에 의해 강제 종료됨", "offline");
+                    this._setStatusByKey("player_status_kicked", "offline");
                     if (this.onKicked) this.onKicked();
                     this.stop();
                 } else if (this.isPlaying) {
-                    this._setStatus("연결 끊김", "offline");
+                    this._setStatusByKey("player_status_offline", "offline");
                     this.stop();
                 }
             }
@@ -377,6 +384,20 @@ class RealtimeAudioPlayer {
         this.nextStartTime += audioBuffer.duration;
     }
 
+    _setStatusByKey(key, className) {
+        this.statusKey = key;
+        this.statusClass = className;
+        const text = window.i18n ? window.i18n.t(key) : "";
+        this._setStatus(text, className);
+    }
+
+    _refreshLanguage() {
+        if (this.statusKey) {
+            this._setStatusByKey(this.statusKey, this.statusClass);
+        }
+        this._updateUI(this.isPlaying);
+    }
+
     _setStatus(text, className) {
         const elem = document.getElementById(this.statusElemId);
         if (elem) {
@@ -389,16 +410,23 @@ class RealtimeAudioPlayer {
         const btn = document.getElementById(this.playBtnId);
         const playIcon = document.getElementById("playIcon");
         const playText = document.getElementById("playText");
+        const isListener = this.statusElemId === "listenerStatus";
 
         if (btn) {
             if (playing) {
                 btn.classList.add("playing");
                 if (playIcon) playIcon.textContent = "⏸";
-                if (playText) playText.textContent = "청취 일시정지";
+                if (playText) {
+                    const key = isListener ? "listener_play_pause" : "btn_pause_listen";
+                    playText.textContent = window.i18n ? window.i18n.t(key) : "청취 일시정지";
+                }
             } else {
                 btn.classList.remove("playing");
                 if (playIcon) playIcon.textContent = "▶";
-                if (playText) playText.textContent = "실시간 청취 시작";
+                if (playText) {
+                    const key = isListener ? "listener_play_start" : "btn_start_listen";
+                    playText.textContent = window.i18n ? window.i18n.t(key) : "실시간 청취 시작";
+                }
             }
         }
     }

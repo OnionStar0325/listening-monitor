@@ -11,10 +11,16 @@
 </head>
 <body class="listener-body">
     <div class="listener-card">
+        <div class="card-top-action">
+            <button type="button" class="btn-lang" onclick="toggleLanguage()" title="Change Language">
+                <span id="langLabel">🌐 English</span>
+            </button>
+        </div>
+
         <div class="listener-header">
             <span class="pulse-icon">🎙️</span>
-            <h2>실시간 오디오 모니터</h2>
-            <p id="listenerStatus" class="status-indicator">연결 준비 중...</p>
+            <h2 data-i18n="listener_header_title">실시간 오디오 모니터</h2>
+            <p id="listenerStatus" class="status-indicator" data-i18n="listener_status_ready">연결 준비 중...</p>
         </div>
 
         <div class="visualizer-wrapper">
@@ -23,22 +29,22 @@
 
         <div class="listener-controls">
             <button id="playBtn" class="btn btn-play-large" onclick="toggleAudioPlayback()">
-                <span id="playIcon">▶</span> <span id="playText">청취 시작하기</span>
+                <span id="playIcon">▶</span> <span id="playText" data-i18n="listener_play_start">청취 시작하기</span>
             </button>
         </div>
 
         <div class="control-row">
-            <label for="localVolume">볼륨:</label>
+            <label for="localVolume" data-i18n="listener_label_volume">볼륨:</label>
             <input type="range" id="localVolume" min="0" max="100" value="85" oninput="setPlayerVolume(this.value)">
             <span id="volumeValue" class="slider-val">85%</span>
         </div>
 
-        <div id="kickedAlert" class="alert-box error hidden">
-            🚨 <strong>알림:</strong> 관리자에 의해 세션 연결이 종료되었습니다.
+        <div id="kickedAlert" class="alert-box error hidden" data-i18n="alert_kicked_text">
+            🚨 알림: 관리자에 의해 세션 연결이 종료되었습니다.
         </div>
 
         <div class="listener-footer">
-            <p>🔒 TLS 암호화 보안 스트림 구동 중</p>
+            <p data-i18n="footer_secure_text">🔒 TLS 암호화 보안 스트림 구동 중</p>
         </div>
     </div>
 
@@ -46,6 +52,7 @@
         // 서버에서 전달된 토큰 파라미터 보관
         window.LISTENER_TOKEN = "{{ token }}";
     </script>
+    <script src="/static/js/i18n.js"></script>
     <script src="/static/js/audio_player.js"></script>
     <script>
         window.addEventListener("DOMContentLoaded", () => {
