@@ -329,6 +329,7 @@ class AudioEngine:
         return {
             "is_running": self._running,
             "is_virtual_mode": self.is_virtual_mode,
+            "is_fallback_tone": self.is_virtual_mode,
             "platform": sys.platform,
             "configured_backend": self.backend_setting,
             "active_backend": self.active_backend,

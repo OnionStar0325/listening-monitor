@@ -8,6 +8,34 @@ from core.session_manager import session_manager
 router = APIRouter(tags=["web"])
 templates = Jinja2Templates(directory=str(config.TEMPLATES_DIR))
 
+def render_template(
+    request: Request,
+    template_name: str,
+    context: dict,
+    status_code: int = 200,
+) -> HTMLResponse:
+    """
+    Starlette 및 FastAPI의 TemplateResponse 시그니처 변경(Python 3.13 / Starlette 0.28+ 호환)을
+    완벽히 지원하는 안전한 템플릿 렌더러.
+    """
+    context = dict(context)
+    context["request"] = request
+    try:
+        # Starlette 0.28+ / 0.38+ / 1.0+ (request가 첫 번째 인자)
+        return templates.TemplateResponse(
+            request=request,
+            name=template_name,
+            context=context,
+            status_code=status_code,
+        )
+    except TypeError:
+        # Starlette 구버전 (name이 첫 번째 인자)
+        return templates.TemplateResponse(
+            name=template_name,
+            context=context,
+            status_code=status_code,
+        )
+
 @router.get("/", response_class=HTMLResponse)
 async def index_page(request: Request):
     """관리자 메인 대시보드"""
@@ -16,7 +44,7 @@ async def index_page(request: Request):
 
     # 미로그인 상태면 로그인 페이지로 이동
     if not session or session.role != "admin":
-        return RedirectResponse(url="/login")
+        return RedirectResponse(url="/login", status_code=303)
 
     import platform
     os_name = platform.system()
@@ -31,10 +59,10 @@ async def index_page(request: Request):
     sessions = session_manager.get_all_sessions()
     active_listeners = session_manager.get_active_listener_count()
 
-    return templates.TemplateResponse(
+    return render_template(
+        request,
         "dashboard.html",
         {
-            "request": request,
             "session": session,
             "sample_rate": config.AUDIO_SAMPLE_RATE,
             "server_port": config.SERVER_PORT,
@@ -57,7 +85,7 @@ async def login_page(request: Request, error: str = ""):
     if session and session.role == "admin":
         return RedirectResponse(url="/", status_code=303)
 
-    return templates.TemplateResponse("login.html", {"request": request, "error": error})
+    return render_template(request, "login.html", {"error": error})
 
 @router.post("/login")
 async def login_submit(
@@ -72,9 +100,10 @@ async def login_submit(
     0.05초 미만의 번개 같은 첫 페이지 진입 속도를 보장합니다.
     """
     if username != config.ADMIN_USERNAME or not session_manager.verify_admin_password(password):
-        return templates.TemplateResponse(
+        return render_template(
+            request,
             "login.html",
-            {"request": request, "error": "아이디 또는 비밀번호가 일치하지 않습니다."},
+            {"error": "아이디 또는 비밀번호가 일치하지 않습니다."},
             status_code=401,
         )
 
@@ -103,10 +132,10 @@ async def listener_page(request: Request, token: str = ""):
     안드로이드, iOS, 윈도우, 웹 등에서 초대 링크(?token=...)를 열면
     복잡한 설정 없이 원클릭으로 즉시 실시간 오디오를 수신합니다.
     """
-    return templates.TemplateResponse(
+    return render_template(
+        request,
         "listener.html",
         {
-            "request": request,
             "token": token,
             "sample_rate": config.AUDIO_SAMPLE_RATE,
         }
