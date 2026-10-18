@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 import config
-from core.session_manager import session_manager
+from core.session_manager import session_manager, extract_client_ip
 
 router = APIRouter(tags=["web"])
 templates = Jinja2Templates(directory=str(config.TEMPLATES_DIR))
@@ -39,8 +39,9 @@ def render_template(
 @router.get("/", response_class=HTMLResponse)
 async def index_page(request: Request):
     """관리자 메인 대시보드"""
+    client_ip = extract_client_ip(request)
     session_id = request.cookies.get(config.COOKIE_NAME)
-    session = session_manager.get_session(session_id) if session_id else None
+    session = session_manager.get_session(session_id, current_ip=client_ip) if session_id else None
 
     # 미로그인 상태면 로그인 페이지로 이동
     if not session or session.role != "admin":
@@ -107,7 +108,7 @@ async def login_submit(
             status_code=401,
         )
 
-    client_ip = request.client.host if request.client else "unknown"
+    client_ip = extract_client_ip(request)
     user_agent = request.headers.get("user-agent", "unknown")
     session = session_manager.create_admin_session(ip_address=client_ip, user_agent=user_agent)
 
@@ -132,6 +133,15 @@ async def listener_page(request: Request, token: str = ""):
     안드로이드, iOS, 윈도우, 웹 등에서 초대 링크(?token=...)를 열면
     복잡한 설정 없이 원클릭으로 즉시 실시간 오디오를 수신합니다.
     """
+    client_ip = extract_client_ip(request)
+    user_agent = request.headers.get("user-agent", "unknown")
+    if token:
+        session_manager.authenticate_listener_token(
+            token=token,
+            ip_address=client_ip,
+            user_agent=user_agent,
+        )
+
     return render_template(
         request,
         "listener.html",

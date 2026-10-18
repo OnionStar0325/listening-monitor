@@ -83,8 +83,8 @@ async def create_invite(req: CreateInviteRequest, request: Request, admin_sessio
     if req.base_url:
         full_url = f"{req.base_url.rstrip('/')}/listen?token={token}"
     else:
-        host = request.headers.get("host", "localhost")
-        scheme = "https"
+        host = request.headers.get("x-forwarded-host") or request.headers.get("host", "localhost")
+        scheme = request.headers.get("x-forwarded-proto", "https")
         full_url = f"{scheme}://{host}/listen?token={token}"
 
     qr_png = generate_qr_png_data_url(full_url)
@@ -101,8 +101,9 @@ async def create_invite(req: CreateInviteRequest, request: Request, admin_sessio
 @router.get("/invite/{token}/qr")
 async def get_invite_qr(token: str, request: Request, format: str = "png"):
     """특정 초대 토큰에 대한 QR 코드 이미지 직접 서빙 (png 또는 svg)"""
-    host = request.headers.get("host", "localhost")
-    full_url = f"https://{host}/listen?token={token}"
+    host = request.headers.get("x-forwarded-host") or request.headers.get("host", "localhost")
+    scheme = request.headers.get("x-forwarded-proto", "https")
+    full_url = f"{scheme}://{host}/listen?token={token}"
     
     if format.lower() == "svg":
         qr_svg = generate_qr_svg(full_url)

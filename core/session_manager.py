@@ -35,6 +35,58 @@ class Session:
         return True
 
 
+def extract_client_ip(request_or_websocket) -> str:
+    """
+    HTTP Request 또는 WebSocket에서 실제 접속지 클라이언트 IP 주소를 신뢰성 있게 추출합니다.
+    Tailscale(Serve/Funnel), X-Forwarded-For, X-Real-IP, Cloudflare, 리버스 프록시 환경 지원.
+    """
+    if not request_or_websocket:
+        return "unknown"
+
+    headers = getattr(request_or_websocket, "headers", {})
+
+    # 1. Tailscale 전용 헤더 (Tailscale Serve / Funnel 사용 시 클라이언트 Tailscale 100.x.y.z IP 주입)
+    ts_ip = headers.get("tailscale-client-ip")
+    if ts_ip and ts_ip.strip():
+        return ts_ip.strip()
+
+    # 2. X-Forwarded-For 헤더 (표준 프록시 체인: 클라이언트, 프록시1, 프록시2...)
+    xff = headers.get("x-forwarded-for")
+    if xff and xff.strip():
+        ips = [x.strip() for x in xff.split(",") if x.strip()]
+        for ip in ips:
+            clean_ip = ip.split(":")[0] if ":" in ip and not ip.startswith("[") else ip.strip("[]")
+            if clean_ip and clean_ip not in ("127.0.0.1", "::1", "localhost"):
+                return clean_ip
+        if ips:
+            return ips[0].split(":")[0].strip("[]")
+
+    # 3. X-Real-IP 헤더 (Nginx, Caddy, Tailscale, HAProxy 등)
+    x_real = headers.get("x-real-ip")
+    if x_real and x_real.strip():
+        clean_real = x_real.split(":")[0].strip("[]")
+        if clean_real not in ("127.0.0.1", "::1", "localhost"):
+            return clean_real
+
+    # 4. Cloudflare 전용 헤더 (Cloudflare Tunnel 사용 시)
+    cf_ip = headers.get("cf-connecting-ip")
+    if cf_ip and cf_ip.strip():
+        return cf_ip.strip()
+
+    # 5. 기타 프록시 표준 헤더
+    for h in ("true-client-ip", "x-client-ip"):
+        val = headers.get(h)
+        if val and val.strip():
+            return val.split(":")[0].strip("[]")
+
+    # 6. 소켓 레벨 직접 연결 클라이언트 IP
+    client = getattr(request_or_websocket, "client", None)
+    if client and getattr(client, "host", None):
+        return client.host
+
+    return "unknown"
+
+
 class SessionManager:
     """
     단일 관리자 + 청취자용 세션 토큰 체계를 관리하는 세션 매니저.
@@ -116,10 +168,12 @@ class SessionManager:
         # 1. 이미 동일한 초대 토큰으로 생성된 유효 세션이 있는지 확인 (중복 등록 방지)
         for s in list(self._sessions.values()):
             if s.invite_token == token and s.is_valid() and not s.is_revoked:
-                s.ip_address = ip_address
+                # 127.0.0.1이 아닌 실제 원격 IP가 들어왔거나 기존 IP가 로컬호스트인 경우 최신 IP로 갱신
+                if ip_address not in ("127.0.0.1", "::1", "localhost", "unknown") or s.ip_address in ("127.0.0.1", "::1", "localhost", "unknown"):
+                    s.ip_address = ip_address
                 s.user_agent = user_agent
                 s.last_active = now
-                logger.info(f"기존 청취자 세션 재사용(중복 방지): {s.session_id} ({s.client_name}, IP: {ip_address})")
+                logger.info(f"기존 청취자 세션 재사용(중복 방지): {s.session_id} ({s.client_name}, IP: {s.ip_address})")
                 return s
         
         # 2. 최초 접속 시에만 신규 세션 1개 생성
@@ -140,10 +194,13 @@ class SessionManager:
         return session
 
     # --- 세션 조회 및 검증 ---
-    def get_session(self, session_id: str) -> Optional[Session]:
+    def get_session(self, session_id: str, current_ip: Optional[str] = None) -> Optional[Session]:
         session = self._sessions.get(session_id)
         if session and session.is_valid():
             session.last_active = time.time()
+            # 프록시/Tailscale 등에서 실제 접속지 IP가 확인되면 세션 IP 갱신
+            if current_ip and current_ip not in ("127.0.0.1", "::1", "localhost", "unknown"):
+                session.ip_address = current_ip
             return session
         return None
 

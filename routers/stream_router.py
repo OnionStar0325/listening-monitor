@@ -4,7 +4,7 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, status, Re
 from fastapi.responses import StreamingResponse
 
 import config
-from core.session_manager import session_manager
+from core.session_manager import session_manager, extract_client_ip
 from core.broadcaster import broadcaster
 
 logger = logging.getLogger("listening_monitor.stream")
@@ -23,14 +23,14 @@ async def audio_stream_websocket(
     - 관리자: session_id 파라미터 또는 쿠키 기반 인증
     - 청취자: 초대 토큰(?token=...) 기반 자동 세션 인증
     """
-    client_ip = websocket.client.host if websocket.client else "unknown"
+    client_ip = extract_client_ip(websocket)
     user_agent = websocket.headers.get("user-agent", "unknown")
     target_session = None
 
     # 1. 쿼리 파라미터 session_id 또는 쿠키 확인
     active_session_id = session_id or websocket.cookies.get(config.COOKIE_NAME)
     if active_session_id:
-        target_session = session_manager.get_session(active_session_id)
+        target_session = session_manager.get_session(active_session_id, current_ip=client_ip)
 
     # 2. 초대 토큰(token) 파라미터 확인 (새로운 청취자 세션 생성)
     if not target_session and token:
@@ -39,6 +39,8 @@ async def audio_stream_websocket(
             ip_address=client_ip,
             user_agent=user_agent
         )
+    elif target_session and client_ip not in ("127.0.0.1", "::1", "localhost", "unknown"):
+        target_session.ip_address = client_ip
 
     # 3. 인증 실패 시 연결 거부
     if not target_session or not target_session.is_valid():
@@ -79,14 +81,14 @@ async def audio_stream_http(
     HTTP 라이브 오디오(Endless WAV) 스트리밍 엔드포인트.
     HTML5 <audio playsinline src="/api/stream/audio.wav?token=..."> 태그로 직접 재생됩니다.
     """
-    client_ip = request.client.host if request.client else "unknown"
+    client_ip = extract_client_ip(request)
     user_agent = request.headers.get("user-agent", "unknown")
     target_session = None
 
     # 1. session_id 또는 쿠키 확인
     active_session_id = session_id or request.cookies.get(config.COOKIE_NAME)
     if active_session_id:
-        target_session = session_manager.get_session(active_session_id)
+        target_session = session_manager.get_session(active_session_id, current_ip=client_ip)
 
     # 2. 초대 토큰 확인
     if not target_session and token:
@@ -95,6 +97,8 @@ async def audio_stream_http(
             ip_address=client_ip,
             user_agent=user_agent
         )
+    elif target_session and client_ip not in ("127.0.0.1", "::1", "localhost", "unknown"):
+        target_session.ip_address = client_ip
 
     # 3. 인증 검증
     if not target_session or not target_session.is_valid():

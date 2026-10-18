@@ -94,6 +94,8 @@ def run_server():
             ssl_certfile=cert_path,
             log_level="info",
             access_log=False,  # 시스템 I/O 부하 절감
+            proxy_headers=True,
+            forwarded_allow_ips="*",
         )
     except PermissionError:
         if port == 443:
@@ -112,6 +114,8 @@ def run_server():
                 ssl_certfile=cert_path,
                 log_level="info",
                 access_log=False,
+                proxy_headers=True,
+                forwarded_allow_ips="*",
             )
         else:
             logger.error(

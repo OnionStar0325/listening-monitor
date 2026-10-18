@@ -2,7 +2,7 @@ from fastapi import APIRouter, Request, Response, HTTPException, status, Depends
 from pydantic import BaseModel
 
 import config
-from core.session_manager import session_manager, Session
+from core.session_manager import session_manager, Session, extract_client_ip
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -27,7 +27,8 @@ def get_current_session(request: Request) -> Session:
     if not session_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="로그인이 필요합니다.")
 
-    session = session_manager.get_session(session_id)
+    client_ip = extract_client_ip(request)
+    session = session_manager.get_session(session_id, current_ip=client_ip)
     if not session:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="세션이 만료되었거나 유효하지 않습니다.")
 
@@ -46,7 +47,7 @@ async def login(req: LoginRequest, request: Request, response: Response):
     if req.username != config.ADMIN_USERNAME or not session_manager.verify_admin_password(req.password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="아이디 또는 비밀번호가 일치하지 않습니다.")
 
-    client_ip = request.client.host if request.client else "unknown"
+    client_ip = extract_client_ip(request)
     user_agent = request.headers.get("user-agent", "unknown")
 
     session = session_manager.create_admin_session(ip_address=client_ip, user_agent=user_agent)

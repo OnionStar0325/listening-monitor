@@ -153,10 +153,74 @@ def test_api_endpoints():
 
     print("✅ [PASS] REST API, QR 코드, 및 iOS HTTP 라이브 스트림 엔드포인트 전체 검증")
 
+def test_tailscale_and_proxy_client_ip():
+    """Tailscale 및 리버스 프록시 접속 시 실제 클라이언트 IP 추출 검증"""
+    from core.session_manager import extract_client_ip
+
+    class DummyRequest:
+        def __init__(self, headers=None, client_host=None):
+            self.headers = headers or {}
+            if client_host:
+                class Client:
+                    def __init__(self, host):
+                        self.host = host
+                self.client = Client(client_host)
+            else:
+                self.client = None
+
+    # 1. Tailscale 전용 헤더 추출 검증
+    req_ts = DummyRequest(headers={"tailscale-client-ip": "100.85.12.34"}, client_host="127.0.0.1")
+    assert extract_client_ip(req_ts) == "100.85.12.34"
+
+    # 2. X-Forwarded-For 다중 프록시 체인에서 실제 클라이언트 IP 추출 검증
+    req_xff = DummyRequest(headers={"x-forwarded-for": "100.90.11.22:54321, 127.0.0.1"}, client_host="127.0.0.1")
+    assert extract_client_ip(req_xff) == "100.90.11.22"
+
+    # 3. X-Real-IP 검증
+    req_real = DummyRequest(headers={"x-real-ip": "100.70.33.44"}, client_host="127.0.0.1")
+    assert extract_client_ip(req_real) == "100.70.33.44"
+
+    # 4. Cloudflare cf-connecting-ip 검증
+    req_cf = DummyRequest(headers={"cf-connecting-ip": "203.0.113.195"}, client_host="127.0.0.1")
+    assert extract_client_ip(req_cf) == "203.0.113.195"
+
+    # 5. 헤더 없을 때 소켓 클라이언트 IP 폴백 검증
+    req_sock = DummyRequest(headers={}, client_host="192.168.0.15")
+    assert extract_client_ip(req_sock) == "192.168.0.15"
+
+    # 6. TestClient를 통한 실제 API 요청 시 Tailscale IP 세션 등록 검증
+    client = TestClient(app)
+    res_login = client.post(
+        "/api/auth/login",
+        json={"username": config.ADMIN_USERNAME, "password": config.ADMIN_PASSWORD},
+        headers={"tailscale-client-ip": "100.101.102.103"}
+    )
+    assert res_login.status_code == 200
+    ts_session_id = res_login.json()["session_id"]
+    ts_session = session_manager.get_session(ts_session_id)
+    assert ts_session.ip_address == "100.101.102.103", f"예상: 100.101.102.103, 실제: {ts_session.ip_address}"
+
+    # 7. 초대 링크 발급 및 X-Forwarded-For 접속 시 청취자 세션 IP 갱신 검증
+    inv = session_manager.create_listener_invite("Tailscale User", valid_hours=1)
+    tok = inv["token"]
+    # 최초 접속 시 X-Forwarded-For 적용
+    res_listen = client.get(
+        f"/listen?token={tok}",
+        headers={"x-forwarded-for": "100.110.120.130, 127.0.0.1"}
+    )
+    assert res_listen.status_code == 200
+    all_sess = session_manager.get_all_sessions()
+    ts_listener = [s for s in all_sess if s["client_name"] == "Tailscale User"]
+    assert len(ts_listener) == 1
+    assert ts_listener[0]["ip_address"] == "100.110.120.130"
+
+    print("✅ [PASS] Tailscale 및 리버스 프록시 환경 실제 IP 추출 검증 완료")
+
 if __name__ == "__main__":
     test_ssl_certificate_generation()
     test_session_lifecycle_and_kick()
     test_audio_engine_and_virtual_tone()
     test_system_monitor()
     test_api_endpoints()
+    test_tailscale_and_proxy_client_ip()
     print("\n🎉 모든 검증 테스트가 100% 성공했습니다!")
