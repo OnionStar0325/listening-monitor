@@ -23,6 +23,7 @@ sudo apt-get install -y \
     libportaudio2 \
     portaudio19-dev \
     pulseaudio-utils \
+    python3-pil \
     openssl
 
 # 2. 파이썬 가상환경(venv) 및 패키지 설치 (Debian 12 Bookworm / Ubuntu PEP 668 호환)

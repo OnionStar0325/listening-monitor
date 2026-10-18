@@ -17,20 +17,26 @@ class CreateInviteRequest(BaseModel):
     base_url: Optional[str] = None  # 클라이언트 브라우저 주소 (프로토콜+호스트)
 
 def generate_qr_png_data_url(url: str) -> str:
-    """순수 파이썬으로 100% 브라우저 호환 Base64 PNG QR 코드 생성"""
-    qr = qrcode.QRCode(
-        version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_M,
-        box_size=6,
-        border=2,
-    )
-    qr.add_data(url)
-    qr.make(fit=True)
-    img = qr.make_image(fill_color="black", back_color="white")
-    buf = io.BytesIO()
-    img.save(buf, "PNG")
-    b64_str = base64.b64encode(buf.getvalue()).decode("utf-8")
-    return f"data:image/png;base64,{b64_str}"
+    """순수 파이썬으로 100% 브라우저 호환 Base64 PNG QR 코드 생성 (Pillow 미설치 시 SVG Data URL로 안전 자동 폴백)"""
+    try:
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_M,
+            box_size=6,
+            border=2,
+        )
+        qr.add_data(url)
+        qr.make(fit=True)
+        img = qr.make_image(fill_color="black", back_color="white")
+        buf = io.BytesIO()
+        img.save(buf, "PNG")
+        b64_str = base64.b64encode(buf.getvalue()).decode("utf-8")
+        return f"data:image/png;base64,{b64_str}"
+    except Exception:
+        # Pillow(PIL) 미설치 또는 런타임 오류 시 100% 표준 호환 SVG Base64 Data URL로 자동 폴백
+        svg_content = generate_qr_svg(url)
+        b64_svg = base64.b64encode(svg_content.encode("utf-8")).decode("utf-8")
+        return f"data:image/svg+xml;base64,{b64_svg}"
 
 def generate_qr_svg(url: str) -> str:
     """SVG 헤더를 제거한 순수 벡터 SVG QR 코드"""
@@ -102,14 +108,18 @@ async def get_invite_qr(token: str, request: Request, format: str = "png"):
         qr_svg = generate_qr_svg(full_url)
         return Response(content=qr_svg, media_type="image/svg+xml")
     
-    # PNG 바이너리 스트림 반환
-    qr = qrcode.QRCode(box_size=8, border=2)
-    qr.add_data(full_url)
-    qr.make(fit=True)
-    img = qr.make_image(fill_color="black", back_color="white")
-    buf = io.BytesIO()
-    img.save(buf, "PNG")
-    return Response(content=buf.getvalue(), media_type="image/png")
+    # PNG 바이너리 스트림 반환 (Pillow 미설치 시 SVG로 안전하게 자동 폴백)
+    try:
+        qr = qrcode.QRCode(box_size=8, border=2)
+        qr.add_data(full_url)
+        qr.make(fit=True)
+        img = qr.make_image(fill_color="black", back_color="white")
+        buf = io.BytesIO()
+        img.save(buf, "PNG")
+        return Response(content=buf.getvalue(), media_type="image/png")
+    except Exception:
+        qr_svg = generate_qr_svg(full_url)
+        return Response(content=qr_svg, media_type="image/svg+xml")
 
 @router.post("/{session_id}/kick")
 async def kick_session(session_id: str, admin_session: Session = Depends(require_admin)):
